@@ -24,18 +24,29 @@ const QuickChartPlugin = (function() {
         columns = getColumns(cachedData);
     }
 
-    function loadParamsFromUrl() {
-        const hashParams = new URLSearchParams(window.location.hash.substring(1));
-        const x = hashParams.get('qc.x');
-        params.x = (x in columns) ? x : '';
+    function loadParams() {
+        const jsonString = sessionStorage.getItem('datasette-quickchart-params');
+        let data;
+        if (jsonString) {
+            try {
+                data = JSON.parse(jsonString);
+            } catch {
+                data = {};
+            }
+        }
+        params.x = (data.x in columns) ? data.x : '';
         for (const par of ['y', 'y2']) {
-            const cols = hashParams.getAll(`qc.${par}`);
+            const cols = data[par] || [];
             params[par] = cols.filter(col => columns.hasOwnProperty(col));
         }
-        params.type = hashParams.get('qc.t') || 'line';
-        params.stack = hashParams.get('qc.st') == '1';
-        params.cat_x = hashParams.get('qc.cx') == '1';
-        params.labels = hashParams.get('qc.lb') == '1';
+        params.type = data.t || 'line';
+        params.stack = data.st || false;
+        params.cat_x = data.cx || false;
+        params.labels = data.lb || false;
+    }
+
+    function saveParams() {
+        sessionStorage.setItem('datasette-quickchart-params', JSON.stringify(params));
     }
 
     function updateParamsFromForms() {
@@ -51,11 +62,6 @@ const QuickChartPlugin = (function() {
         params.stack = formData.get('stack') == '1';
         params.cat_x = formData.get('cat_x') == '1';
         params.labels = formData.get('labels') == '1';
-        //params.agg = config.get('agg') == '1';
-    }
-
-    function loadParamsFromLocalStorage() {
-
     }
 
     function getInput(name, type, value, checked) {
@@ -157,26 +163,17 @@ const QuickChartPlugin = (function() {
     }
 
     function getContent() {
-        const classes = [];
-        if (isStackable()) {
-            classes.push('stackable');
-        }
         var html = '<div id="qc-left">';
         html += '<form id="qc-traces">' + getTracesForm() + '</form>';
         html += '</div>';
         html += '<div id="qc-right">';
-        html += `<form id="qc-config" data-type="${params.type}"`;
-        if (classes.length > 0) {
-            html += ' class="' + classes.join(' ') + '"';
-        }
-        html += '>';
-        html += getConfigForm() + '</form>';
+        html += '<form id="qc-config">' + getConfigForm() + '</form>';
         html += '<div id="qc-chart"></div></div>';
         return html;
     }
 
-    function oneInRow(event) {
-        const input = event.target;
+    function oneInRow(ev) {
+        const input = ev.target;
         if (input.checked) {
             const inputs = input.closest('tr').querySelectorAll('input');
             for (const other of inputs) {
@@ -184,55 +181,6 @@ const QuickChartPlugin = (function() {
                     other.checked = false;
                 }
             }
-        }
-    }
-
-    function replaceHash(url, hash) {
-        const urlObj = new URL(url);
-        urlObj.hash = hash;
-        return urlObj.toString();
-    }
-
-    function updateUrl() {
-        const hashParams = new URLSearchParams(window.location.hash.substring(1));
-        for (const par of ['x', 'y', 'y2', 'st', 'cx', 'lb']) {
-            hashParams.delete(`qc.${par}`);
-        }
-        if (params.x > '') {
-            hashParams.set('qc.x', params.x);
-        }
-        for (const par of ['y', 'y2']) {
-            params[par].forEach(col => hashParams.append(`qc.${par}`, col));
-        }
-        hashParams.set('qc.t', params.type);
-        if (params.stack) {
-            hashParams.set('qc.st', 1);
-        }
-        if (params.cat_x) {
-            hashParams.set('qc.cx', 1);
-        }
-        if (params.labels) {
-            hashParams.set('qc.lb', 1);
-        }
-        const hashStr = hashParams.toString();
-        window.location.hash = hashStr;
-    }
-
-    function updateLinks() {
-        const hash = window.location.hash;
-        const selectors = ['.rows-and-columns th a', '.facet-results a'];
-        var links = [];
-        for (const sel of selectors) {
-            links = links.concat(Array.from(document.querySelectorAll(sel)));
-        }
-        for (const link of links) {
-            if (link.href) {
-                link.href = replaceHash(link.href, hash);
-            }
-        }
-        const form = document.querySelector('.content form.core');
-        if (form) {
-            form.action = replaceHash(form.action, hash);
         }
     }
 
@@ -244,13 +192,12 @@ const QuickChartPlugin = (function() {
         }
         const configForm = document.getElementById('qc-config');
         for (form of [tracesForm, configForm]) {
-            form.addEventListener('change', (event) => {
+            form.addEventListener('change', (ev) => {
                 updateParamsFromForms();
                 setConfigFormClasses();
                 //configForm.dataset.type = params.type;
                 //configForm.classList.toggle('stackable', isStackable());
-                updateUrl();
-                updateLinks();
+                saveParams();
                 updateChart();
             });
         }
@@ -261,7 +208,7 @@ const QuickChartPlugin = (function() {
         node.innerHTML = text;
     }
 
-    function validateParams() {
+    function readyToPlot() {
         if (params.x == '') {
             return false;
         }
@@ -338,7 +285,7 @@ const QuickChartPlugin = (function() {
     }
 
     async function updateChart() {
-        if (!validateParams()) {
+        if (!readyToPlot()) {
             chartMessage(help[params.type]);
             return;
         }
@@ -453,7 +400,7 @@ const QuickChartPlugin = (function() {
         const panel = document.getElementById('qc-panel');
         if (panel != null) {
             await fetchData();
-            loadParamsFromUrl();
+            loadParams();
             panel.innerHTML = getContent();
             //panel.style.minHeight = getMinHeight()+'px';
             setConfigFormClasses();
