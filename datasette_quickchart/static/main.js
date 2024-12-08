@@ -168,7 +168,9 @@ const QuickChartPlugin = (function() {
         html += '</div>';
         html += '<div id="qc-right">';
         html += '<form id="qc-config">' + getConfigForm() + '</form>';
-        html += '<div id="qc-chart"></div></div>';
+        html += '<div id="qc-chart"></div>'
+        html += '<div><a id="qc-close" href="#">Close Quick Chart</a></div>';
+        html += '</div>';
         return html;
     }
 
@@ -201,6 +203,9 @@ const QuickChartPlugin = (function() {
                 updateChart();
             });
         }
+        document.getElementById('qc-close').addEventListener('click', (ev) => {
+            document.getElementById('qc-section').classList.remove('open');
+        });
     }
 
     function chartMessage(text) {
@@ -391,22 +396,15 @@ const QuickChartPlugin = (function() {
         chart.render();
     }
 
-    function getMinHeight() {
-        const form = document.getElementById('qc-traces');
-        return Math.max(form.offsetHeight+10, 300);
-    }
-
     async function initialize() {
         const panel = document.getElementById('qc-panel');
-        if (panel != null) {
-            await fetchData();
-            loadParams();
-            panel.innerHTML = getContent();
-            //panel.style.minHeight = getMinHeight()+'px';
-            setConfigFormClasses();
-            addEventListeners();
-            updateChart();
-        }
+        await fetchData();
+        loadParams();
+        panel.innerHTML = getContent();
+        setConfigFormClasses();
+        addEventListeners();
+        updateChart();
+        panel.parentElement.classList.add('open');
     }
 
     // Public API
@@ -415,4 +413,4 @@ const QuickChartPlugin = (function() {
     }
 })();
 
-document.addEventListener('datasette_init', QuickChartPlugin.initialize);
+//document.addEventListener('datasette_init', QuickChartPlugin.initialize);
