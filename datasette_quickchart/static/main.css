@@ -1,0 +1,22 @@
+#qc-panel{display:flex;font-size:.8em;background-color:#fff;border-bottom:1px solid #eee}
+#qc-right{text-align:left;display:flex;flex-direction:column;align-items:center;overflow:hidden;padding-left:20px}
+
+#qc-traces td{text-align:center;padding:.2rem .5rem;border:1px solid #eee}
+#qc-traces td:first-child{text-align:left}
+#qc-traces td:last-child{text-align:left}
+#qc-traces th{text-align:center;padding:.2rem .5rem;font-weight:600;border:1px solid #eee}
+#qc-traces th:first-child{text-align:left}
+#qc-traces th:last-child{text-align:left}
+#qc-traces tr:first-child td{text-align:center;padding:1rem}
+
+#qc-config{display:inline-block}
+#qc-config td{padding:.2rem .5rem;border:1px solid #eee}
+#qc-config td.sep{width:1em;border-top:none;border-bottom:none}
+
+#qc-config td:has(input[name="stack"]){display:none}
+#qc-config.show-st td:has(input[name="stack"]){display:table-cell}
+
+#qc-config td:has(input[name="cat_x"]){display:none}
+#qc-config.show-cx td:has(input[name="cat_x"]){display:table-cell}
+
+#qc-chart{border:1px solid #ccc;box-sizing:content-box;width:700px;height:450px;padding:10px;resize:both;overflow:hidden;min-width:700px;min-height:450px;margin-top:20px}
