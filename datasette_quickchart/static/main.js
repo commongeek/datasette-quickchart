@@ -1,6 +1,6 @@
 const QuickChartPlugin = (function() {
     let cachedData = null;
-    let columns = {};
+    let columns = new Map();
     let params = {x: '', y: [], y2: [], type: 'line', stack: false, cat_x: false, labels: false};
     let chart = null;
     let help = {
@@ -21,12 +21,21 @@ const QuickChartPlugin = (function() {
         const dataUrl = appendQueryString(jsonUrl, '_shape=array&_size=max');
         const resp = await fetch(dataUrl);
         cachedData = await resp.json();
-        columns = getColumns(cachedData);
+        getColumns(cachedData);
+        /*
+        for (const [col, type] of Object.entries(columns)) {
+            if (type == 'time') {
+                for (row of cachedData) {
+                    row[col] = new Date(row[col]);
+                }
+            }
+        }
+        */
     }
 
     function loadParams() {
         const jsonString = sessionStorage.getItem('datasette-quickchart-params');
-        let data;
+        let data = {};
         if (jsonString) {
             try {
                 data = JSON.parse(jsonString);
@@ -34,10 +43,10 @@ const QuickChartPlugin = (function() {
                 data = {};
             }
         }
-        params.x = (data.x in columns) ? data.x : '';
+        params.x = columns.has(data.x) ? data.x : '';
         for (const par of ['y', 'y2']) {
             const cols = data[par] || [];
-            params[par] = cols.filter(col => columns.hasOwnProperty(col));
+            params[par] = cols.filter(col => columns.has(col));
         }
         params.type = data.t || 'line';
         params.stack = data.st || false;
@@ -84,7 +93,7 @@ const QuickChartPlugin = (function() {
     function getTracesForm() {
         var html = '<table>';
         html += '<tr><th>Column</th><th>X</th><th>Y</th><th>Y2</th><th>Axis type</td></tr>';
-        for (const [name, type] of Object.entries(columns)) {
+        for (const [name, type] of columns.entries()) {
             html += '<tr>' + td(name);
             html += td((type == 'null') ? '' : getInput('x', 'radio', name, name==params.x));
             if (type == 'numeric') {
@@ -119,7 +128,7 @@ const QuickChartPlugin = (function() {
         if (params.type == 'bar') {
             classes.push('show-st');
         }
-        if ((params.type != 'pie') && (params.x > '') && (columns[params.x] != 'categorical')) {
+        if ((params.type != 'pie') && (params.x > '') && (columns.get(params.x) != 'categorical')) {
             classes.push('show-cx');
         }
         const form = document.getElementById('qc-config');
@@ -141,21 +150,20 @@ const QuickChartPlugin = (function() {
     }
 
     function getColumns(data) {
-        const columns = {};
+        columns.clear();
         for (const row of data) {
             for (const [key, val] of Object.entries(row)) {
                 const newType = valType(val);
-                if (key in columns) {
-                    const oldType = columns[key];
+                if (columns.has(key)) {
+                    const oldType = columns.get(key);
                     if ((newType != oldType) && (newType != 'null') && (oldType != 'categorical')) {
-                        columns[key] = (oldType == 'null') ? newType : 'categorical';
+                        columns.set(key,  (oldType == 'null') ? newType : 'categorical');
                     }
                 } else {
-                    columns[key] = newType;
+                    columns.set(key, newType);
                 }
             }
         }
-        return columns;
     }
 
     function isStackable() {
@@ -197,8 +205,6 @@ const QuickChartPlugin = (function() {
             form.addEventListener('change', (ev) => {
                 updateParamsFromForms();
                 setConfigFormClasses();
-                //configForm.dataset.type = params.type;
-                //configForm.classList.toggle('stackable', isStackable());
                 saveParams();
                 updateChart();
             });
@@ -229,10 +235,10 @@ const QuickChartPlugin = (function() {
     }
 
     function getSortedData(sortCol) {
-        if (columns[sortCol] == 'time') {
-            return [...cachedData].sort((a, b) => a[sortCol].localeCompare(b[sortCol]));
+        if (columns.get(sortCol) === 'time') {
+            return cachedData.toSorted((a, b) => a[sortCol] > b[sortCol] ? 1 : -1);
         }
-        return [...cachedData].sort((a, b) => a[sortCol] - b[sortCol]);
+        return cachedData.toSorted((a, b) => a[sortCol] - b[sortCol]);
     }
 
     function allInt(data, col) {
@@ -289,7 +295,7 @@ const QuickChartPlugin = (function() {
         return (colType == 'time') ? 'datetime' : (colType == 'numeric') ? 'numeric' : 'category';
     }
 
-    async function updateChart() {
+    function updateChart() {
         if (!readyToPlot()) {
             chartMessage(help[params.type]);
             return;
@@ -327,7 +333,7 @@ const QuickChartPlugin = (function() {
             },
             series: [],
             xaxis: {
-                type: 'categorical', //(columns[params.x]),
+                type: params.cat_x ? 'category' : toApexType(columns.get(params.x)),
                 categories: []
             },
             yaxis: [],
@@ -347,8 +353,8 @@ const QuickChartPlugin = (function() {
             const data = pieData(params.x, valCol);
             options.series = data.values;
         } else {
-            const data = columns[params.x] == 'categorical' ? cachedData : getSortedData(params.x);
-            if ((columns[params.x] == 'numeric') && allInt(data, params.x)) {
+            const data = columns.get(params.x) == 'categorical' ? cachedData : getSortedData(params.x);
+            if ((columns.get(params.x) == 'numeric') && allInt(data, params.x)) {
                 options.xaxis.labels = {
                     formatter: intFormatter.format
                 };
@@ -373,7 +379,6 @@ const QuickChartPlugin = (function() {
                 options.yaxis[1].title = {text: params.y2.join(' | '), style: {fontWeight: 400}, rotate:90};
             }
         }
-        console.log(options);
         /*
          * doesn't work :(
          *
@@ -393,7 +398,7 @@ const QuickChartPlugin = (function() {
         const chartDiv = document.getElementById('qc-chart');
         chartDiv.innerHTML = '';
         chart = new ApexCharts(chartDiv, options);
-        chart.render();
+        setTimeout(() => chart.render(), 0);
     }
 
     async function initialize() {
