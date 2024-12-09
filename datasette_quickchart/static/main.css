@@ -30,6 +30,7 @@
 #qc-close{line-height:1;position:absolute;bottom:0}
 #qc-close a{text-decoration:none}
 
+#qc-panel label{display:block;white-space:nowrap}
 #qc-panel label input[type="checkbox"]{margin:3px;vertical-align:middle}
 #qc-panel label input[type="radio"]{margin:3px;vertical-align:middle}
 #qc-panel label input+span{vertical-align:middle;margin-left:.2em}
