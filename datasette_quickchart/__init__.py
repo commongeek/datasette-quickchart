@@ -1,27 +1,27 @@
 from datasette import hookimpl
 
-html = """
-<div id="qc-section">
-    <button id="qc-open" type="button" onclick="QuickChartPlugin.initialize()">Quick Chart</button>
-    <div id="qc-panel"></div>
-</div>
-"""
+def is_table_or_query(view_name, request):
+    return view_name == 'table' or request.path.endswith('/query')
 
 @hookimpl
-async def extra_js_urls(template, database, table, columns, view_name, request, datasette):
-    return [
-        'https://cdn.jsdelivr.net/npm/apexcharts',
-        '/-/static-plugins/datasette-quickchart/main.js'
-    ]
+def extra_body_script(datasette, view_name, request):
+    if is_table_or_query(view_name, request):
+        config = datasette.plugin_config('datasette-quickchart') or {}
+        if 'palette' in config:
+            return f"const QUICKCHART_PALETTE = {config['palette']};"
+    return []
 
 @hookimpl
-async def extra_css_urls(template, database, table, columns, view_name, request, datasette):
-    return ['/-/static-plugins/datasette-quickchart/main.css']
+async def extra_js_urls(view_name, request):
+    if is_table_or_query(view_name, request):
+        return [
+            'https://cdn.jsdelivr.net/npm/apexcharts',
+            '/-/static-plugins/datasette-quickchart/main.js'
+        ]
+    return []
 
 @hookimpl
-def top_table(datasette, request, database, table):
-    return html
-
-@hookimpl
-def top_query(datasette, request, database, sql):
-    return html
+async def extra_css_urls(view_name, request):
+    if is_table_or_query(view_name, request):
+        return ['/-/static-plugins/datasette-quickchart/main.css']
+    return []

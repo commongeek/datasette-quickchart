@@ -1,8 +1,10 @@
 const QuickChartPlugin = (function() {
+    let initialized = false;
     let cachedData = null;
     let columns = new Map();
     let params = {x: '', y: [], y2: [], type: 'line', stack: false, cat_x: false, labels: false};
     let chart = null;
+    let apexPalette = 'palette7';
     let help = {
         'line': 'To build a line chart, select X and at least one of Y or Y2.',
         'bar': 'To build a bar chart, select X and at least one of Y or Y2.',
@@ -22,15 +24,10 @@ const QuickChartPlugin = (function() {
         const resp = await fetch(dataUrl);
         cachedData = await resp.json();
         getColumns(cachedData);
-        /*
-        for (const [col, type] of Object.entries(columns)) {
-            if (type == 'time') {
-                for (row of cachedData) {
-                    row[col] = new Date(row[col]);
-                }
-            }
-        }
-        */
+    }
+
+    function isValidChartType(chartType) {
+        return ['line', 'area', 'bar', 'scatter', 'pie'].includes(chartType);
     }
 
     function loadParams() {
@@ -48,17 +45,23 @@ const QuickChartPlugin = (function() {
             const cols = data[par] || [];
             params[par] = cols.filter(col => columns.has(col));
         }
-        params.type = data.t || 'line';
+        params.type = isValidChartType(data.type) ? data.type : 'line';
         params.stack = data.st || false;
         params.cat_x = data.cx || false;
         params.labels = data.lb || false;
+    }
+
+    function setPalette() {
+        if (typeof QUICKCHART_PALETTE !== 'undefined') {
+            apexPalette = `palette${QUICKCHART_PALETTE}`;
+        }
     }
 
     function saveParams() {
         sessionStorage.setItem('datasette-quickchart-params', JSON.stringify(params));
     }
 
-    function updateParamsFromForms() {
+    function updateParams() {
         const tracesForm = document.getElementById('qc-traces');
         const traces = new FormData(tracesForm);
         params.x = traces.get('x') || '';
@@ -73,9 +76,14 @@ const QuickChartPlugin = (function() {
         params.labels = formData.get('labels') == '1';
     }
 
-    function getInput(name, type, value, checked) {
+    function getInput(name, type, value, checked, label='', title='') {
         const extra = checked ? ' checked' : '';
-        return `<input name="${name}" type="${type}" value="${value}"${extra} />`;
+        let input = `<input name="${name}" type="${type}" value="${value}"${extra} />`;
+        if (label) {
+            const titleAttr = ` title="${title}"`;
+            input = `<label${titleAttr}>${input}<span>${label}</span></label>`;
+        }
+        return input;
     }
 
     function td(html) {
@@ -110,29 +118,23 @@ const QuickChartPlugin = (function() {
 
     function getConfigForm() {
         var html = '<table><tr>';
-        html += '<td><label>' + getInput('type', 'radio', 'line', params.type=='line') + ' Line</label></td>';
-        html += '<td><label>' + getInput('type', 'radio', 'scatter', params.type=='scatter') + ' Scatter</label></td>';
-        html += '<td><label>' + getInput('type', 'radio', 'area', params.type=='area') + ' Area</label></td>';
-        html += '<td><label>' + getInput('type', 'radio', 'bar', params.type=='bar') + ' Bar</label></td>';
-        html += '<td><label>' + getInput('type', 'radio', 'pie', params.type=='pie') + ' Pie</label></td>';
+        html += td(getInput('type', 'radio', 'line', params.type=='line', 'Line'));
+        html += td(getInput('type', 'radio', 'scatter', params.type=='scatter', 'Scatter'));
+        html += td(getInput('type', 'radio', 'area', params.type=='area', 'Area'));
+        html += td(getInput('type', 'radio', 'bar', params.type=='bar', 'Bar'));
+        html += td(getInput('type', 'radio', 'pie', params.type=='pie', 'Pie'));
         html += '<td class="sep"></td>';
-        html += '<td><label title="Show data labels">' + getInput('labels', 'checkbox', '1', params.cat_x) + ' Labels</label></td>';
-        html += '<td><label title="Stacked chart">' + getInput('stack', 'checkbox', '1', params.stack) + ' Stacked</label></td>';
-        html += '<td><label title="Treat X data as labels">' + getInput('cat_x', 'checkbox', '1', params.cat_x) + ' Categorical X</label></td>';
+        html += td(getInput('labels', 'checkbox', '1', params.cat_x, 'Labels', 'Show data labels'));
+        html += td(getInput('stack', 'checkbox', '1', params.stack, 'Stacked', 'Stacked chart'));
+        html += td(getInput('cat_x', 'checkbox', '1', params.cat_x, 'Categorical X', 'Treat X data as labels'));
         html += '</tr></table>';
         return html;
     }
 
-    function setConfigFormClasses() {
-        classes = [];
-        if (params.type == 'bar') {
-            classes.push('show-st');
-        }
-        if ((params.type != 'pie') && (params.x > '') && (columns.get(params.x) != 'categorical')) {
-            classes.push('show-cx');
-        }
+    function setConfigFormDataset() {
         const form = document.getElementById('qc-config');
-        form.classList = classes.join(' ');
+        form.dataset.chartType = params.type;
+        form.dataset.xType = params.x ? columns.get(params.x) : '';
     }
 
     function isValidDate(val) {
@@ -173,11 +175,11 @@ const QuickChartPlugin = (function() {
     function getContent() {
         var html = '<div id="qc-left">';
         html += '<form id="qc-traces">' + getTracesForm() + '</form>';
+        html += '<div id="qc-close"><a href="#">Close Quick Chart</a></div>';
         html += '</div>';
         html += '<div id="qc-right">';
         html += '<form id="qc-config">' + getConfigForm() + '</form>';
         html += '<div id="qc-chart"></div>'
-        html += '<div><a id="qc-close" href="#">Close Quick Chart</a></div>';
         html += '</div>';
         return html;
     }
@@ -203,13 +205,14 @@ const QuickChartPlugin = (function() {
         const configForm = document.getElementById('qc-config');
         for (form of [tracesForm, configForm]) {
             form.addEventListener('change', (ev) => {
-                updateParamsFromForms();
-                setConfigFormClasses();
+                updateParams();
+                setConfigFormDataset();
                 saveParams();
                 updateChart();
             });
         }
-        document.getElementById('qc-close').addEventListener('click', (ev) => {
+        document.querySelector('#qc-close a').addEventListener('click', (ev) => {
+            ev.preventDefault();
             document.getElementById('qc-section').classList.remove('open');
         });
     }
@@ -249,25 +252,6 @@ const QuickChartPlugin = (function() {
         }
         return true;
     }
-
-    /*
-    function aggregatedData(xCol, yCols) {
-        const agg = {};
-        for (const row of cachedData) {
-            const x = row[xCol];
-            let obj = agg[x];
-            if (obj == null) {
-                obj = Object.fromEntries(yCols.map(col => [col, 0]));
-                obj[xCol] = x;
-                agg[x] = obj;
-            }
-            for (const col of yCols) {
-                obj[col] += row[col] || 0;
-            }
-        }
-        return Object.values(agg);
-    }
-    */
 
     function pieData(labelCol, valueCol, aggregate) {
         const data = {};
@@ -315,7 +299,8 @@ const QuickChartPlugin = (function() {
                 type: params.type,
                 height: 'auto',
                 stacked: params.stack,
-                toolbar: { show: true }
+                toolbar: {show: true},
+                animations: {speed: 400}
             },
             dataLabels: {
                 enabled: params.labels,
@@ -323,21 +308,19 @@ const QuickChartPlugin = (function() {
                     fontWeight: 'normal'
                 }
             },
-            theme: { //3, 6, 7
-                palette: 'palette7'
+            theme: {
+                palette: apexPalette
             },
             tooltip: {
                 y: {
                     formatter: formatter.format
                 }
             },
-            series: [],
             xaxis: {
                 type: params.cat_x ? 'category' : toApexType(columns.get(params.x)),
                 categories: []
             },
-            yaxis: [],
-            labels: []
+            yaxis: []
         };
         if (params.y.length > 0) {
             options.yaxis.push({});
@@ -352,6 +335,7 @@ const QuickChartPlugin = (function() {
             const valCol = params.y[0];
             const data = pieData(params.x, valCol);
             options.series = data.values;
+            options.labels = data.labels;
         } else {
             const data = columns.get(params.x) == 'categorical' ? cachedData : getSortedData(params.x);
             if ((columns.get(params.x) == 'numeric') && allInt(data, params.x)) {
@@ -360,6 +344,7 @@ const QuickChartPlugin = (function() {
                 };
             }
             options.xaxis.categories = data.map(row => row[params.x]);
+            options.series = [];
             for (const y of params.y) {
                 options.series.push({
                     name: y,
@@ -379,19 +364,6 @@ const QuickChartPlugin = (function() {
                 options.yaxis[1].title = {text: params.y2.join(' | '), style: {fontWeight: 400}, rotate:90};
             }
         }
-        /*
-         * doesn't work :(
-         *
-        if (chart == null) {
-            const chartDiv = document.getElementById('qc-chart');
-            //chartDiv.innerHTML = '';
-            chart = new ApexCharts(chartDiv, options);
-            chart.render();
-        } else {
-            chart.updateOptions(options, true);
-            //chart.render();
-        }
-        */
         if (chart != null) {
             chart.destroy();
         }
@@ -401,21 +373,43 @@ const QuickChartPlugin = (function() {
         setTimeout(() => chart.render(), 0);
     }
 
-    async function initialize() {
+    async function init() {
         const panel = document.getElementById('qc-panel');
-        await fetchData();
-        loadParams();
-        panel.innerHTML = getContent();
-        setConfigFormClasses();
-        addEventListeners();
-        updateChart();
+        if (!initialized) {
+            await fetchData();
+            loadParams();
+            panel.innerHTML = getContent();
+            setConfigFormDataset();
+            addEventListeners();
+            setPalette();
+            updateChart();
+            initialized = true;
+        }
         panel.parentElement.classList.add('open');
     }
 
     // Public API
     return {
-        initialize: initialize
+        init: init
     }
 })();
 
-//document.addEventListener('datasette_init', QuickChartPlugin.initialize);
+document.addEventListener('DOMContentLoaded', () => {
+    const createElementWithId = (tag, id) => {
+        const el = document.createElement(tag);
+        el.id = id;
+        return el;
+    };
+    const header = document.querySelector('.page-header,h1');
+    if (header) {
+        const outer = createElementWithId('div', 'qc-section');
+        const button = createElementWithId('button', 'qc-open');
+        button.type = 'button';
+        button.textContent = 'Quick Chart';
+        button.onclick = () => QuickChartPlugin.init();
+        const panel = createElementWithId('div', 'qc-panel');
+        outer.append(button, panel);
+        // insert after header
+        header.parentNode.insertBefore(outer, header.nextSibling);
+    }
+});

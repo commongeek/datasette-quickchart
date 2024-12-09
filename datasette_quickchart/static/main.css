@@ -1,7 +1,5 @@
-#qc-panel{display:none;font-size:.8em;background-color:#fff;border-bottom:1px solid #eee}
-/*
-#qc-left{position:relative;padding-bottom:2em}
-*/
+#qc-panel{display:none;font-size:.8em;background-color:#fff;border-bottom:1px solid #eee;padding:1em}
+#qc-left{position:relative}
 #qc-right{text-align:left;display:flex;flex-direction:column;align-items:center;overflow:hidden;padding-left:20px}
 
 #qc-traces td{text-align:center;padding:.2rem .5rem;border:1px solid #eee}
@@ -14,17 +12,24 @@
 
 #qc-config{display:inline-block}
 #qc-config td{padding:.2rem .5rem;border:1px solid #eee}
-#qc-config td.sep{width:1em;border-top:none;border-bottom:none}
+#qc-config td.sep{border-top:none;border-bottom:none}
+#qc-config label{display:inline-flex;align-items:center}
 
 #qc-config td:has(input[name="stack"]){display:none}
-#qc-config.show-st td:has(input[name="stack"]){display:table-cell}
+#qc-config[data-chart-type="bars"] td:has(input[name="stack"]){display:table-cell}
 
 #qc-config td:has(input[name="cat_x"]){display:none}
-#qc-config.show-cx td:has(input[name="cat_x"]){display:table-cell}
+#qc-config:not([data-chart-type="pie"])[data-x-type="time"] td:has(input[name="cat_x"]){display:table-cell}
+#qc-config:not([data-chart-type="pie"])[data-x-type="numeric"] td:has(input[name="cat_x"]){display:table-cell}
 
 #qc-chart{border:1px solid #ccc;box-sizing:content-box;width:700px;height:450px;padding:10px;resize:both;overflow:hidden;min-width:700px;min-height:450px;margin-top:20px}
 
 #qc-section.open #qc-panel{display:flex}
 #qc-section.open #qc-open{display:none}
 
-#qc-close{line-height:2}
+#qc-close{line-height:1;position:absolute;bottom:0}
+#qc-close a{text-decoration:none}
+
+#qc-panel label input[type="checkbox"]{margin:3px;vertical-align:middle}
+#qc-panel label input[type="radio"]{margin:3px;vertical-align:middle}
+#qc-panel label input+span{vertical-align:middle;margin-left:.2em}
