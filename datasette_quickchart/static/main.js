@@ -279,6 +279,11 @@ const QuickChartPlugin = (function() {
         return (colType == 'time') ? 'datetime' : (colType == 'numeric') ? 'numeric' : 'category';
     }
 
+    function isDebugMode() {
+        const hash = window.location.hash;
+        return hash.includes('quickchart-debug');
+    }
+
     function updateChart() {
         if (!readyToPlot()) {
             chartMessage(help[params.type]);
@@ -363,6 +368,9 @@ const QuickChartPlugin = (function() {
                 options.yaxis[0].title = {text: params.y.join(' | '), style: {fontWeight: 400}};
                 options.yaxis[1].title = {text: params.y2.join(' | '), style: {fontWeight: 400}, rotate:90};
             }
+        }
+        if (isDebugMode()) {
+            console.log(options);
         }
         if (chart != null) {
             chart.destroy();
