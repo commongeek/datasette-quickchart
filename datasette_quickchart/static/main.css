@@ -1,5 +1,5 @@
 #qc-panel{display:none;font-size:.8em;background-color:#fff;border-bottom:1px solid #eee;padding:1em}
-#qc-left{position:relative}
+#qc-left{position:relative;padding-bottom:1.5rem}
 #qc-right{text-align:left;display:flex;flex-direction:column;align-items:center;overflow:hidden;padding-left:20px}
 
 #qc-traces td{text-align:center;padding:.2rem .5rem;border:1px solid #eee}
