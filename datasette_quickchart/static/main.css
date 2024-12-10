@@ -1,4 +1,9 @@
 #qc-panel{display:none;font-size:.8em;background-color:#fff;border-bottom:1px solid #eee;padding:1em}
+#qc-panel label{display:inline-block;white-space:nowrap;width:auto}
+#qc-panel input[type="checkbox"]{margin:3px;vertical-align:middle}
+#qc-panel input[type="radio"]{margin:3px;vertical-align:middle}
+#qc-panel label input+span{display:inline-block;vertical-align:middle;margin-left:.2em}
+
 #qc-left{position:relative;padding-bottom:1.5rem}
 #qc-right{text-align:left;display:flex;flex-direction:column;align-items:center;overflow:hidden;padding-left:20px}
 
@@ -25,17 +30,11 @@
 #qc-close{line-height:1;position:absolute;bottom:0}
 #qc-close a{text-decoration:none}
 
-#qc-panel label{display:inline-block;block;white-space:nowrap}
-#qc-panel input[type="checkbox"]{margin:3px;vertical-align:middle}
-#qc-panel input[type="radio"]{margin:3px;vertical-align:middle}
-#qc-panel label input+span{display:inline-block;vertical-align:middle;margin-left:.2em}
-
 /* Stack option */
 #qc-config label:has(input[name="stack"]){display:none}
 #qc-config[data-chart-type="bar"] label:has(input[name="stack"]){display:inline-block}
 
 /* Categorical X option */
-#qc-config[data-chart-type="pie"] label:has(input[name="cat_x"]){display:none}
 #qc-config[data-chart-type="pie"] label:has(input[name="cat_x"]){display:none}
 #qc-config[data-x-type="categorical"] label:has(input[name="cat_x"]){display:none}
 
