@@ -2,7 +2,7 @@ const QuickChartPlugin = (function() {
     let initialized = false;
     let cachedData = null;
     let columns = new Map();
-    let params = {x: '', y: [], y2: [], type: 'line', stack: false, cat_x: false, labels: false};
+    let params = {x: '', y: [], y2: [], type: 'line', stack: false, cat_x: false, labels: false, agg: ''};
     let chart = null;
     let apexPalette = 'palette7';
     let help = {
@@ -49,6 +49,7 @@ const QuickChartPlugin = (function() {
         params.stack = data.st || false;
         params.cat_x = data.cx || false;
         params.labels = data.lb || false;
+        params.agg = data.agg || '';
     }
 
     function setPalette() {
@@ -74,17 +75,34 @@ const QuickChartPlugin = (function() {
         params.stack = formData.get('stack') == '1';
         params.cat_x = formData.get('cat_x') == '1';
         params.labels = formData.get('labels') == '1';
+        params.agg = formData.get('agg');
     }
 
-    function getInput(name, type, value, checked, label='', title='') {
-        const extra = checked ? ' checked' : '';
-        let input = `<input name="${name}" type="${type}" value="${value}"${extra} />`;
+    function getInput(name, type, value, checked, title='', group='', label='') {
+        const checkedAttr = checked ? ' checked' : '';
+        const groupAttr = group ? ` data-group="${group}"` : '';
+        const titleAttr = label ? '' : ` title="${title}"`;
+        let html =`<input name="${name}" type="${type}" value="${value}"${titleAttr}${groupAttr}${checkedAttr} />`;
         if (label) {
-            const titleAttr = ` title="${title}"`;
-            input = `<label${titleAttr}>${input}<span>${label}</span></label>`;
+            html = `<label title="${title}">${html}<span>${label}</span></label>`;
         }
-        return input;
+        return html;
     }
+
+    function radio(name, value, checked, title='', group='', label='') {
+        return getInput(name, 'radio', value, checked, title, group, label);
+    }
+
+    function checkbox(name, value, checked, title='', group='', label='') {
+        return getInput(name, 'checkbox', value, checked, title, group, label);
+    }
+
+    /*
+    function div(html, class='') {
+        const classAttr = (class) ? ` class="${class}"`;
+        return `<div${classAttr}>${html}</div>`;
+    }
+    */
 
     function td(html) {
         return `<td>${html}</td>`;
@@ -100,13 +118,13 @@ const QuickChartPlugin = (function() {
 
     function getTracesForm() {
         var html = '<table>';
-        html += '<tr><th>Column</th><th>X</th><th>Y</th><th>Y2</th><th>Axis type</td></tr>';
+        html += '<tr><th>Column</th><th>X</th><th>Y</th><th>Y2</th><th>Axis type</th></tr>';
         for (const [name, type] of columns.entries()) {
             html += '<tr>' + td(name);
-            html += td((type == 'null') ? '' : getInput('x', 'radio', name, name==params.x));
+            html += td((type == 'null') ? '' : radio('x', name, name==params.x, '', name));
             if (type == 'numeric') {
-                html += td(getInput('y', 'checkbox', name, params.y.includes(name)));
-                html += td(getInput('y2', 'checkbox', name, params.y2.includes(name)));
+                html += td(checkbox('y', name, params.y.includes(name), '', name));
+                html += td(checkbox('y2', name, params.y2.includes(name), '', name));
             } else {
                 html += '<td></td><td></td>';
             }
@@ -116,18 +134,44 @@ const QuickChartPlugin = (function() {
         return html;
     }
 
+    /*
     function getConfigForm() {
         var html = '<table><tr>';
-        html += td(getInput('type', 'radio', 'line', params.type=='line', 'Line'));
-        html += td(getInput('type', 'radio', 'scatter', params.type=='scatter', 'Scatter'));
-        html += td(getInput('type', 'radio', 'area', params.type=='area', 'Area'));
-        html += td(getInput('type', 'radio', 'bar', params.type=='bar', 'Bar'));
-        html += td(getInput('type', 'radio', 'pie', params.type=='pie', 'Pie'));
+        html += td(radio('type', 'line', params.type=='line', '', '', 'Line'));
+        html += td(radio('type', 'scatter', params.type=='scatter', '', '', 'Scatter'));
+        html += td(radio('type', 'area', params.type=='area', '', '', 'Area'));
+        html += td(radio('type', 'bar', params.type=='bar', '', '', 'Bar'));
+        html += td(radio('type', 'pie', params.type=='pie', '', '', 'Pie'));
         html += '<td class="sep"></td>';
-        html += td(getInput('labels', 'checkbox', '1', params.cat_x, 'Labels', 'Show data labels'));
-        html += td(getInput('stack', 'checkbox', '1', params.stack, 'Stacked', 'Stacked chart'));
-        html += td(getInput('cat_x', 'checkbox', '1', params.cat_x, 'Categorical X', 'Treat X data as labels'));
+        html += td(checkbox('labels', 1, params.labels, 'Show data labels', '', 'Labels'));
+        html += td(checkbox('stack', 1, params.stack, 'Stacked chart', '', 'Stacked'));
+        html += td(checkbox('cat_x', 1, params.cat_x, 'Treat X data as labels', '', 'Categorical X'));
+        html += '<td class="sep"></td>';
+        html += td('Agg:');
+        html += td(radio('agg', '', params.agg=='', 'Do not aggregate by X', 'agg', 'None'));
+        html += td(radio('agg', 'sum', params.agg=='sum', 'Sum by X', 'agg', 'Sum'));
+        html += td(radio('agg', 'avg', params.agg=='avg', 'Average by X', 'agg', 'Avg'));
         html += '</tr></table>';
+        return html;
+    }
+    */
+
+    function getConfigForm() {
+        var html = '<div>';
+        html += radio('type', 'line', params.type=='line', '', '', 'Line');
+        html += radio('type', 'scatter', params.type=='scatter', '', '', 'Scatter');
+        html += radio('type', 'area', params.type=='area', '', '', 'Area');
+        html += radio('type', 'bar', params.type=='bar', '', '', 'Bar');
+        html += radio('type', 'pie', params.type=='pie', '', '', 'Pie');
+        html += '</div><div>'
+        html += checkbox('labels', 1, params.labels, 'Show data labels', '', 'Labels');
+        html += checkbox('stack', 1, params.stack, 'Stacked chart', '', 'Stacked');
+        html += checkbox('cat_x', 1, params.cat_x, 'Treat X data as labels', '', 'Categorical X');
+        html += '</div><div id="qt-agg"><div>Agg:</div>';
+        html += radio('agg', '', params.agg=='', 'Do not aggregate by X', 'agg', 'None');
+        html += radio('agg', 'sum', params.agg=='sum', 'Sum by X', 'agg', 'Sum');
+        html += radio('agg', 'avg', params.agg=='avg', 'Average by X', 'agg', 'Avg');
+        html += '</div>';
         return html;
     }
 
@@ -184,13 +228,15 @@ const QuickChartPlugin = (function() {
         return html;
     }
 
-    function oneInRow(ev) {
-        const input = ev.target;
-        if (input.checked) {
-            const inputs = input.closest('tr').querySelectorAll('input');
-            for (const other of inputs) {
-                if (other !== input) {
-                    other.checked = false;
+    function handleGroupedInputs(ev) {
+        const target = ev.target;
+        if (target.checked && target.dataset.group) {
+            const group = target.dataset.group;
+            const form = target.form;
+            const inputs = form.querySelectorAll(`input[data-group="${group}"]`);
+            for (const input of inputs) {
+                if (input !== target) {
+                    input.checked = false;
                 }
             }
         }
@@ -198,12 +244,12 @@ const QuickChartPlugin = (function() {
 
     function addEventListeners() {
         const tracesForm = document.getElementById('qc-traces');
-        const tracesFormInputs = tracesForm.querySelectorAll('tr input');
-        for (const input of tracesFormInputs) {
-            input.addEventListener('change', oneInRow);
-        }
         const configForm = document.getElementById('qc-config');
-        for (form of [tracesForm, configForm]) {
+        for (const form of [tracesForm, configForm]) {
+            const groupedInputs = form.querySelectorAll('input[data-group]');
+            for (const input of groupedInputs) {
+                input.addEventListener('change', handleGroupedInputs);
+            }
             form.addEventListener('change', (ev) => {
                 updateParams();
                 setConfigFormDataset();
@@ -237,13 +283,6 @@ const QuickChartPlugin = (function() {
         return (params.y.length > 0) || (params.y2.length > 0);
     }
 
-    function getSortedData(sortCol) {
-        if (columns.get(sortCol) === 'time') {
-            return cachedData.toSorted((a, b) => a[sortCol] > b[sortCol] ? 1 : -1);
-        }
-        return cachedData.toSorted((a, b) => a[sortCol] - b[sortCol]);
-    }
-
     function allInt(data, col) {
         for (row of data) {
             if (!Number.isInteger) {
@@ -253,30 +292,114 @@ const QuickChartPlugin = (function() {
         return true;
     }
 
-    function pieData(labelCol, valueCol, aggregate) {
-        const data = {};
+    /*
+    function hasMultipleX(xCol) {
+        const unique = new Set();
         for (const row of cachedData) {
-            const label = row[labelCol];
-            const value = Math.abs(row[valueCol] || 0);
-            if (label in data) {
-                data[label] += value;
-            } else {
-                data[label] = value;
+            const x = row[xCol];
+            if (x == null) continue;
+            if (unique.has(x)) return true;
+            unique.add(x);
+        }
+        return false;
+    }
+    */
+
+    function subset(data, cols) {
+        const result = [];
+        for (const row of data) {
+            const obj = {};
+            for (const col of cols) {
+                obj[col] = row[col];
+            }
+            result.push(obj);
+        }
+        return result;
+    }
+
+    function sortBy(data, by) {
+        if (columns.get(by) === 'time') {
+            return data.toSorted((a, b) => a[by] > b[by] ? 1 : -1);
+        }
+        return data.toSorted((a, b) => a[by] - b[by]);
+    }
+
+    function all(data, func) {
+        for (const row of data) {
+            if (!func(row)) {
+                return false;
             }
         }
-        for (let key in data) {
-            if (data[key] == 0) {
-                delete data[key];
+        return true;
+    }
+
+    function sum(values) {
+        return values.reduce((acc, val) => acc + val, 0);
+    }
+
+    function absSum(values) {
+        return values.reduce((acc, val) => acc + Math.abs(val), 0);
+    }
+
+    function mean(values) {
+        const len = values.filter(el => el !== null).length;
+        return len ? sum(values) / len : null;
+    }
+
+    function groupBy(data, by, aggFunc) {
+        const grouped = new Map();
+        for (const row of data) {
+            const key = row[by];
+            if (!grouped.has(key)) {
+                grouped.set(key, {});
+            }
+            const group = grouped.get(key);
+            for (const [field, value] of Object.entries(row)) {
+                if (field != by) {
+                    if (field in group) {
+                        group[field].push(value);
+                    } else {
+                        group[field] = [value];
+                    }
+                }
             }
         }
+        const result = [];
+        for (const [key, fields] of grouped.entries()) {
+            const row = {[by]: key};
+            for (const [field, values] of Object.entries(fields)) {
+                row[field] = aggFunc(values);
+            }
+            result.push(row);
+        }
+        return result;
+    }
+
+    /*
+    function pieData(labelCol, valueCol) {
+        let data = aggregateData(labelCol, [valueCol], absSum);
+        data = data.filter(row => row[valueCol] > 0);
         return {
-            labels: Object.keys(data),
-            values: Object.values(data)
+            labels: data.map(row => row[labelCol]),
+            values: data.map(row => row[valueCol])
         }
     }
+    */
 
     function toApexType(colType) {
         return (colType == 'time') ? 'datetime' : (colType == 'numeric') ? 'numeric' : 'category';
+    }
+
+    function seriesName(colName, chartType, aggType) {
+        let name = colName;
+        if (chartType != 'pie') {
+            if (aggType == 'sum') {
+                name = `sum(${name})`;
+            } else if (aggType == 'avg') {
+                name = `avg(${name})`;
+            }
+        }
+        return name;
     }
 
     function isDebugMode() {
@@ -338,28 +461,40 @@ const QuickChartPlugin = (function() {
         }
         if (params.type === 'pie') {
             const valCol = params.y[0];
-            const data = pieData(params.x, valCol);
-            options.series = data.values;
-            options.labels = data.labels;
+            let data = subset(cachedData, [params.x, valCol]);
+            data = groupBy(data, params.x, absSum);
+            options.series = data.map(row => row[valCol]);
+            options.labels = data.map(row => row[params.x]);
         } else {
-            const data = columns.get(params.x) == 'categorical' ? cachedData : getSortedData(params.x);
-            if ((columns.get(params.x) == 'numeric') && allInt(data, params.x)) {
-                options.xaxis.labels = {
-                    formatter: intFormatter.format
-                };
+            let data = cachedData;
+            if (columns.get(params.x) != 'categorical') {
+                data = sortBy(data, params.x);
+            }
+            data = subset(data, params.y.concat(params.x, params.y2));
+            if (params.agg) {
+                const aggFunc = (params.agg == 'avg') ? mean : sum;
+                data = groupBy(data, params.x, aggFunc);
+            }
+            if (columns.get(params.x) == 'numeric') {
+                const allIntegers = all(data, (row) => Number.isInteger(row[params.x]));
+                if (allIntegers) {
+                    options.xaxis.labels = {
+                        formatter: intFormatter.format
+                    };
+                }
             }
             options.xaxis.categories = data.map(row => row[params.x]);
             options.series = [];
             for (const y of params.y) {
                 options.series.push({
-                    name: y,
+                    name: seriesName(y, params.type, params.agg),
                     data: data.map(row => row[y]),
                     yaxis: 1
                 });
             }
             for (const y2 of params.y2) {
                 options.series.push({
-                    name: y2,
+                    name: seriesName(y2, params.type, params.agg),
                     data: data.map(row => row[y2]),
                     yaxis: 2
                 });

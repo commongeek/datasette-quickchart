@@ -11,16 +11,11 @@
 #qc-traces tr:first-child td{text-align:center;padding:1rem}
 
 #qc-config{display:inline-block}
-#qc-config td{padding:.2rem .5rem;border:1px solid #eee}
-#qc-config td.sep{border-top:none;border-bottom:none}
-#qc-config label{display:inline-flex;align-items:center}
-
-#qc-config td:has(input[name="stack"]){display:none}
-#qc-config[data-chart-type="bars"] td:has(input[name="stack"]){display:table-cell}
-
-#qc-config td:has(input[name="cat_x"]){display:none}
-#qc-config:not([data-chart-type="pie"])[data-x-type="time"] td:has(input[name="cat_x"]){display:table-cell}
-#qc-config:not([data-chart-type="pie"])[data-x-type="numeric"] td:has(input[name="cat_x"]){display:table-cell}
+#qc-config>div{display:inline-block;border:1px solid #eee}
+#qc-config>div>label{display:inline-block;border-left:1px solid #eee;padding:.2rem .5rem}
+#qc-config>div>label:first-child{border-left:none}
+#qc-config>div+div{margin-left:1em}
+#qc-config>div>div{display:inline-block;padding:.2rem .5rem}
 
 #qc-chart{border:1px solid #ccc;box-sizing:content-box;width:700px;height:450px;padding:10px;resize:both;overflow:hidden;min-width:700px;min-height:450px;margin-top:20px}
 
@@ -30,7 +25,19 @@
 #qc-close{line-height:1;position:absolute;bottom:0}
 #qc-close a{text-decoration:none}
 
-#qc-panel label{display:block;white-space:nowrap}
-#qc-panel label input[type="checkbox"]{margin:3px;vertical-align:middle}
-#qc-panel label input[type="radio"]{margin:3px;vertical-align:middle}
+#qc-panel label{display:inline-block;block;white-space:nowrap}
+#qc-panel input[type="checkbox"]{margin:3px;vertical-align:middle}
+#qc-panel input[type="radio"]{margin:3px;vertical-align:middle}
 #qc-panel label input+span{vertical-align:middle;margin-left:.2em}
+
+/* Stack option */
+#qc-config label:has(input[name="stack"]){display:none}
+#qc-config[data-chart-type="bar"] label:has(input[name="stack"]){display:inline-block}
+
+/* Categorical X option */
+#qc-config[data-chart-type="pie"] label:has(input[name="cat_x"]){display:none}
+#qc-config[data-chart-type="pie"] label:has(input[name="cat_x"]){display:none}
+#qc-config[data-x-type="categorical"] label:has(input[name="cat_x"]){display:none}
+
+/* Aggregation options */
+#qc-config[data-chart-type="pie"] #qt-agg{display:none}
