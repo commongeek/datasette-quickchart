@@ -28,7 +28,7 @@
 #qc-panel label{display:inline-block;block;white-space:nowrap}
 #qc-panel input[type="checkbox"]{margin:3px;vertical-align:middle}
 #qc-panel input[type="radio"]{margin:3px;vertical-align:middle}
-#qc-panel label input+span{vertical-align:middle;margin-left:.2em}
+#qc-panel label input+span{display:inline-block;vertical-align:middle;margin-left:.2em}
 
 /* Stack option */
 #qc-config label:has(input[name="stack"]){display:none}
