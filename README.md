@@ -4,6 +4,10 @@
 # datasette-quickchart
 Datasette plugin for making quick charts from tables and SQL queries using Apex Charts. It only takes 2 clicks to make a first chart.
 
+## Requirements
+
+Requires Datesette version >=1.0a16. It won't work with 0.65 and earlier.
+
 ## Installation
 
 The plugin is single-file and 100% JS, so no installation via PyPI packages is required. Just add a link to your Datasette configuration:
