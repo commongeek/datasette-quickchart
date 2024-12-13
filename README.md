@@ -41,7 +41,7 @@ https://cdn.jsdelivr.net/gh/commongeek/datasette-quickchart@latest/quickchart.mi
 | Feature | Status | Description |
 | --- | --- | --- |
 | Many types of charts | + | Line, scatter, area, bar, stacked bar and pie.  |
-| Works in both table and query wievs | + ||
+| Works in both table and query views | + ||
 | Fast | + | Data is loaded only once. |
 | Keeps settings | + | With the current settings saved in sessionStorage, the chart persists across actions like sorting, moving to the next page of results, and so on. |
 | Interactive | + | The chart supports zooming, scrolling, and other interactions. |
