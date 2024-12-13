@@ -11,13 +11,13 @@ The plugin is single-file and 100% JS, so no installation via PyPI packages is r
 - if you use YAML format:
 ```yaml
 extra_js_urls:
-- https://cdn.jsdelivr.net/gh/commongeek/datasette-quickchart@latest/quickchart.js
+- https://cdn.jsdelivr.net/gh/commongeek/datasette-quickchart@latest/quickchart.min.js
 ```
 
 - if you use JSON format:
 ```json
   "extra_js_urls": [
-    "https://cdn.jsdelivr.net/gh/commongeek/datasette-quickchart@latest/quickchart.js"
+    "https://cdn.jsdelivr.net/gh/commongeek/datasette-quickchart@latest/quickchart.min.js"
   ]
 ```
 The plugin will then add itself to every Datasette table and query view.
@@ -29,7 +29,7 @@ Currently, the only configurable option is to choose the color palette used by t
 
 You can set the palette number by adding an argument to the script URL, e.g.
 ```bash
-https://cdn.jsdelivr.net/gh/commongeek/datasette-quickchart@latest/quickchart.js?palette=1
+https://cdn.jsdelivr.net/gh/commongeek/datasette-quickchart@latest/quickchart.min.js?palette=1
 ```
 
 ## Features
