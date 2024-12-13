@@ -49,7 +49,7 @@ https://cdn.jsdelivr.net/gh/commongeek/datasette-quickchart@latest/quickchart.mi
 | Export | + | The chart supports exporting to PNG or SVG formats. |
 | Aggregation | + | Data can be aggregated as a sum or an average. More advanced aggregations are possible through appropriate SQL queries or views. |
 | Considers all data | + | The chart shows all data up to max_returned_rows Datasette setting, not just the data visible on the current results page. |
-| Recognition of data types | + | The plugin analyzes all data in each column and assigns it one of the following types: numeric, categorical, date/time or null (if all values in the column are null). Timestamps are interpreted as numbers. I don’t know how to change that yet. |
+| Recognition of data types | + | The plugin analyzes the data in each column and classifies it into one of the following types: numeric, categorical, date/time, or null (if all values in the column are null). Timestamps are currently interpreted as numeric values, and I am unsure how to modify this behavior at the moment. |
 
 ## Screenshots
 
