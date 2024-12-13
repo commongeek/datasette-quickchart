@@ -6,7 +6,7 @@ Datasette plugin for making quick charts from tables and SQL queries using Apex 
 
 ## Requirements
 
-Requires Datesette version >=1.0a16. It won't work with 0.65 and earlier.
+Requires Datesette version >= 1.0a16. It won't work with 0.65 and earlier. It may work with earlier versions of 1.0 but it has not been checked.
 
 ## Installation
 
