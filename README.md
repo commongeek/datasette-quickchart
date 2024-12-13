@@ -45,6 +45,7 @@ https://cdn.jsdelivr.net/gh/commongeek/datasette-quickchart@latest/quickchart.mi
 | Fast | + | Data is loaded only once. |
 | Keeps settings | + | With the current settings saved in sessionStorage, the chart persists across actions like sorting, moving to the next page of results, and so on. |
 | Interactive | + | The chart supports zooming, scrolling, and other interactions. |
+| Resizable | + | The chart can be resized by dragging its bottom-right corner. |
 | Export | + | The chart supports exporting to PNG or SVG formats. |
 | Aggregation | + | Data can be aggregated as a sum or an average. More advanced aggregations are possible through appropriate SQL queries or views. |
 | Considers all data | + | The chart shows all data up to max_returned_rows Datasette setting, not just the data visible on the current results page. |
