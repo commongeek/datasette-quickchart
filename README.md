@@ -40,7 +40,7 @@ https://cdn.jsdelivr.net/gh/commongeek/datasette-quickchart@latest/quickchart.js
 | Interactive | + | The chart supports zooming, scrolling, and other interactions. |
 | Export | + | The chart supports exporting to PNG or SVG formats. |
 | Aggregation | + | Data can be aggregated as a sum or an average. More advanced aggregations are possible through appropriate SQL queries or views. |
-| Considers all data | + | The chart shows all data (retrieved by the plugin using Datasette's JSON API with the _size=max option), not just the data visible on the current results page. |
+| Considers all data | + | The chart shows all data up to max_returned_rows Datasette setting, not just the data visible on the current results page. |
 | Recognition of data types | + | The plugin analyzes all data in each column and assigns it one of the following types: numeric, categorical, date/time or null (if all values in the column are null). Timestamps are interpreted as numbers. I don’t know how to change that yet. |
 
 ## Screenshots
