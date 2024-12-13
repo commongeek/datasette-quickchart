@@ -1,3 +1,6 @@
+[![Changelog](https://img.shields.io/github/v/release/commongeek/datasette-quickchart?include_prereleases&label=changelog)](https://github.com/commongeek/datasette-quickchart/releases)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/commongeek/datasette-quickchart/blob/main/LICENSE)
+
 # datasette-quickchart
 Datasette plugin for making quick charts from tables and SQL queries using Apex Charts. It only takes 2 clicks to make a first chart.
 
