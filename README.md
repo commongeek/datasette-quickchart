@@ -4,7 +4,7 @@
 # datasette-quickchart
 Datasette plugin for making quick charts from tables and SQL queries using Apex Charts. It only takes 2 clicks to make a first chart.
 
-# demo
+## Demo
 http://113-30-189-7.cloud-xip.com:8001/demo_data/data_chart
 
 ## Requirements
